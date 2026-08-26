@@ -1,0 +1,190 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "polygon_id": "zone_asphalt_downtown_1",
+        "zone_type": "HIGH_HEAT_ASPHALT",
+        "temperature": 46.8,
+        "heat_index": "EXTREME_DANGER",
+        "shade_coverage_pct": 5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -112.076,
+              33.447
+            ],
+            [
+              -112.071,
+              33.447
+            ],
+            [
+              -112.071,
+              33.45
+            ],
+            [
+              -112.076,
+              33.45
+            ],
+            [
+              -112.076,
+              33.447
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "polygon_id": "zone_park_shaded_2",
+        "zone_type": "COOL_PARK",
+        "temperature": 34.2,
+        "heat_index": "SAFE_MODERATE",
+        "shade_coverage_pct": 80
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -112.081,
+              33.447
+            ],
+            [
+              -112.076,
+              33.447
+            ],
+            [
+              -112.076,
+              33.45
+            ],
+            [
+              -112.081,
+              33.45
+            ],
+            [
+              -112.081,
+              33.447
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "polygon_id": "zone_residential_mixed_3",
+        "zone_type": "URBAN_RESIDENTIAL",
+        "temperature": 41.5,
+        "heat_index": "HIGH",
+        "shade_coverage_pct": 25
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -112.076,
+              33.45
+            ],
+            [
+              -112.071,
+              33.45
+            ],
+            [
+              -112.071,
+              33.454
+            ],
+            [
+              -112.076,
+              33.454
+            ],
+            [
+              -112.076,
+              33.45
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "polygon_id": "zone_tree_canopy_corridor_4",
+        "zone_type": "COOL_CANOPY_STREET",
+        "temperature": 36.0,
+        "heat_index": "MODERATE",
+        "shade_coverage_pct": 65
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -112.081,
+              33.45
+            ],
+            [
+              -112.076,
+              33.45
+            ],
+            [
+              -112.076,
+              33.454
+            ],
+            [
+              -112.081,
+              33.454
+            ],
+            [
+              -112.081,
+              33.45
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "polygon_id": "zone_commercial_plaza_5",
+        "zone_type": "CONCRETE_PLAZA",
+        "temperature": 44.1,
+        "heat_index": "DANGER",
+        "shade_coverage_pct": 15
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -112.071,
+              33.447
+            ],
+            [
+              -112.066,
+              33.447
+            ],
+            [
+              -112.066,
+              33.45
+            ],
+            [
+              -112.071,
+              33.45
+            ],
+            [
+              -112.071,
+              33.447
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
