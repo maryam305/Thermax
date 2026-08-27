@@ -1,274 +1,256 @@
-# ThermaX - Member 1 Final Execution Toolkit (Multi-Factor & Mapbox Ready)
+# ThermaX — Unified Thermal Routing & AI Risk Management API
 
-This toolkit provides a multi-factor thermal overlay and routing optimization engine. It evaluates Mapbox navigation routes against environmental thermal polygon data, calculating composite heat risk scores based on surface temperature, calculated heat index, and shade coverage.
-
----
-
-## 📋 Table of Contents
-1. [Package Contents](#-package-contents)
-2. [Quick Start & Execution](#-quick-start--execution)
-3. [Mathematical Model & Risk Scoring](#-mathematical-model--risk-scoring)
-4. [User Preference Presets](#-user-preference-presets)
-5. [Input Data Specifications & JSON Schemas](#-input-data-specifications--json-schemas)
-   - [1. Thermal Polygon GeoJSON Input (`mock_thermal_data.json`)](#1-thermal-polygon-geojson-input-mock_thermal_datajson)
-   - [2. Mapbox Route GeoJSON Input](#2-mapbox-route-geojson-input)
-6. [Output Data Specifications & JSON Schema](#-output-data-specifications--json-schema)
-   - [1. Route Decision Output Structure](#1-route-decision-output-structure)
-   - [2. Detailed Example Output JSON](#2-detailed-example-output-json)
+ThermaX is a high-performance backend system designed to compute urban pedestrian routes optimized for thermal comfort and heat risk mitigation. By combining live microclimate overlay data with Mapbox/OSRM routing engines and a multi-provider LLM AI gateway (Groq & Gemini), ThermaX provides real-time thermal analysis and intelligent urban heat risk guidance.
 
 ---
 
-## 📦 Package Contents
-- `thermal_overlay_engine.py`: Core routing and thermal risk evaluation engine (`AdvancedThermalRoutingEngine`).
-- `test_comparator.py`: Route comparison test script evaluating original vs. alternative routes.
-- `mock_thermal_data.json`: GeoJSON dataset containing multi-factor thermal polygon zones for Phoenix, AZ.
-- `requirements.txt`: Python package dependencies (`shapely`).
-- `README.md`: System documentation and API reference.
+## 🌟 Key Features
+
+* **Thermal-Aware Pathfinding**: Analyzes pedestrian routes against microclimate surface temperature and shading polygons to minimize severe heat exposure.
+* **FortyGuard Integration**: Dynamically fetches real-time surface temperature and shade coverage data, complete with local fallback mocks for uninterrupted testing.
+* **Unified AI Chat Gateway**: Supports switching between **Groq** (fast, open-weights models) and **Google Gemini** for thermal health advising and urban climate queries.
+* **Resilient Infrastructure**: Built with lazy SDK initialization, mathematical safety fallbacks, and robust CORS handling to ensure hackathon-grade uptime.
 
 ---
 
-## 🚀 Quick Start & Execution
+## 🏗 System Architecture & Project Structure
+
+```text
+thermax-backend/
+│
+├── main.py                     # Unified FastAPI application (Routing + AI Chat)
+├── thermal_overlay_engine.py   # Mathematical engine for heat index & segment risk calculation
+├── services/
+│   ├── ai_agent_service.py     # Lazy-loaded LLM SDK handler (Groq & Gemini)
+│   ├── fortyguard_service.py   # FortyGuard Microclimate API service with auto-fallback
+│   └── routing_service.py      # OSRM/Mapbox pedestrian routing service
+├── requirements.txt            # Dependency configuration
+├── .env.example                # Template environment variable configuration
+└── README.md                   # System documentation
+```
+
+---
+
+## 🛠 Tech Stack & Dependencies
+
+* **Language**: Python 3.10+
+* **Framework**: FastAPI, Uvicorn, Pydantic
+* **Spatial & Geometry Engine**: Shapely
+* **AI & LLM Integration**: `groq`, `google-genai`
+* **Geospatial & HTTP Services**: Requests, Mapbox / OSRM REST APIs
+
+---
+
+## 🚀 Quickstart Guide
+
+### 1. Prerequisites
+
+Ensure you have Python 3.10+ installed on your system.
+
+### 2. Environment Setup
+
+Clone the repository and create a Python Virtual Environment (`venv`):
 
 ```bash
-# 1. Initialize virtual environment
-python -m venv .venv
+# Clone the repository
+git clone https://github.com/your-username/thermax-backend.git
+cd thermax-backend
 
-# 2. Activate virtual environment
-# Windows:
-.venv\Scripts\activate
-# Mac/Linux:
-source .venv/bin/activate
+# Create virtual environment
+python -m venv venv
 
-# 3. Install dependencies
-pip install -r requirements.txt
+# Activate virtual environment
+# On Linux/macOS:
+source venv/bin/activate
+# On Windows (CMD/PowerShell):
+# .\venv\Scripts\activate
+```
 
-# 4. Run test comparator
-python test_comparator.py
+### 3. Install Dependencies
+
+Install all required Python packages inside your active `venv`:
+
+```bash
+pip install --upgrade pip
+pip install fastapi uvicorn python-dotenv requests shapely groq google-genai
+```
+
+### 4. Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+GROQ_API_KEY="your_groq_api_key_here"
+GEMINI_API_KEY="your_gemini_api_key_here"
+FORTYGUARD_API_KEY="your_fortyguard_api_key_here"
+FORTYGUARD_BASE_URL="https://api.fortyguard.com/v1"
 ```
 
 ---
 
-## 🧮 Mathematical Model & Risk Scoring
+## ⚡ Running the Application
 
-Each intersected segment calculates a normalized composite risk score ($0 - 100$) using three environmental factors:
+Start the local server using Uvicorn:
 
-1. **Surface Temperature Normalization**:
-   $$\text{temp\_norm} = \text{clamp}\left(\frac{T - T_{\min}}{T_{\max} - T_{\min}}, 0, 1\right)$$
-   *(Default range: $15.0^\circ\text{C}$ to $55.0^\circ\text{C}$)*
-
-2. **Steadman Heat Index Calculation & Normalization**:
-   Calculates Heat Index ($HI$) from surface temperature ($T^\circ\text{C}$) and relative humidity ($RH\%$).
-   $$\text{hi\_norm} = \text{clamp}\left(\frac{HI - HI_{\min}}{HI_{\max} - HI_{\min}}, 0, 1\right)$$
-   *(Default range: $15.0^\circ\text{C}$ to $90.0^\circ\text{C}$)*
-
-3. **Shade Coverage Factor**:
-   $$\text{shade\_factor} = \frac{100 - \text{shade\_coverage\_pct}}{100}$$
-
-4. **Composite Risk Score**:
-   $$\text{Risk Score} = \Big(w_{\text{temp}} \cdot \text{temp\_norm} + w_{\text{hi}} \cdot \text{hi\_norm} + w_{\text{shade}} \cdot \text{shade\_factor}\Big) \times 100$$
-   *(Default Weights: $w_{\text{temp}} = 0.5$, $w_{\text{hi}} = 0.3$, $w_{\text{shade}} = 0.2$)*
-
----
-
-## ⚙️ User Preference Presets
-
-When comparing an alternative route to an original route, the engine selects the alternative only if it reduces heat risk **and** stays within the maximum allowable extra distance percentage defined by the user's preference:
-
-| Preference Preset | Max Extra Distance (`max_extra_dist_pct`) | Description |
-| :--- | :--- | :--- |
-| `shortest_path` | **5.0%** | Priority is minimal distance/travel time. |
-| `balanced` | **20.0%** | (Default) Balanced compromise between distance and heat avoidance. |
-| `coolest_path` | **$\infty$ (Unlimited)** | Prioritizes maximum shade and coolness, regardless of added distance. |
-
----
-
-## 📥 Input Data Specifications & JSON Schemas
-
-### 1. Thermal Polygon GeoJSON Input (`mock_thermal_data.json`)
-The thermal overlay dataset must be a valid GeoJSON `FeatureCollection`. Each feature represents a spatial thermal zone.
-
-#### JSON Structure Example:
-```json
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "polygon_id": "zone_asphalt_downtown_1",
-        "zone_type": "HIGH_HEAT_ASPHALT",
-        "temperature": 46.8,
-        "heat_index": "EXTREME_DANGER",
-        "shade_coverage_pct": 5
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [-112.076, 33.447],
-            [-112.071, 33.447],
-            [-112.071, 33.450],
-            [-112.076, 33.450],
-            [-112.076, 33.447]
-          ]
-        ]
-      }
-    }
-  ]
-}
+```bash
+uvicorn main:app --reload --port 8000
 ```
 
-#### Properties Schema:
-- `polygon_id` *(string, required)*: Unique identifier for the thermal polygon.
-- `zone_type` *(string)*: Classification of urban zone (e.g. `HIGH_HEAT_ASPHALT`, `COOL_PARK`, `COOL_CANOPY_STREET`).
-- `temperature` *(float, required)*: Surface temperature in Celsius ($^\circ\text{C}$).
-- `heat_index` *(string)*: Descriptive severity label.
-- `shade_coverage_pct` *(integer/float, required)*: Canopy and architectural shade percentage ($0$ to $100$).
+Access the interactive API documentation (Swagger UI) at: **`http://localhost:8000/docs`**
 
 ---
 
-### 2. Mapbox Route GeoJSON Input
-Mapbox navigation routes are passed as GeoJSON `Feature` objects with `LineString` geometries.
+## 📡 Detailed API Endpoints & Payloads
 
-#### JSON Structure Example:
+### 1. Health Check
+* **Endpoint**: `GET /health`
+* **Description**: Verifies service status and external API key configurations.
+
+**Response Example:**
 ```json
 {
-  "type": "Feature",
-  "geometry": {
-    "type": "LineString",
-    "coordinates": [
-      [-112.0760, 33.4485],
-      [-112.0760, 33.4505],
-      [-112.0680, 33.4485]
-    ]
-  }
+  "status": "ok",
+  "groq_configured": true,
+  "gemini_configured": true,
+  "fortyguard_configured": true
 }
 ```
 
 ---
 
-## 📤 Output Data Specifications & JSON Schema
+### 2. Route Heat Analysis
+* **Endpoint**: `POST /api/v1/routing/analyze`
+* **Description**: Evaluates pedestrian routes using microclimate surface temps, heat index, and shade coverage to select the safest path.
 
-### 1. Route Decision Output Structure
-The function `compare_mapbox_routes()` returns a JSON decision payload detailing route selection metrics and full segment breakdown for both routes.
-
-#### Fields Definition:
-- `selected_route` *(string)*: Winning route recommendation (`"original"` or `"alternative"`).
-- `user_preference` *(string)*: Preset applied (`"shortest_path"`, `"balanced"`, `"coolest_path"`).
-- `max_extra_dist_pct_applied` *(float)*: Threshold of acceptable extra distance applied.
-- `risk_score_savings` *(float)*: Risk score points saved if alternative is chosen ($0.0$ if original is chosen).
-- `extra_distance_pct` *(float)*: Added distance percentage of alternative route compared to original.
-- `original_route` / `alternative_route` *(object)*:
-  - `total_distance_deg` *(float)*: Total path length in geographic degrees.
-  - `multi_factor_risk_score` *(float)*: Weighted route composite risk score ($0 - 100$).
-  - `segments_count` *(integer)*: Count of intersected thermal polygons.
-  - `detailed_segments` *(array of objects)*:
-    - `polygon_id` *(string)*: Intersected polygon ID.
-    - `surface_temp_c` *(float)*: Thermal zone surface temperature.
-    - `heat_index_c` *(float)*: Computed Steadman heat index in Celsius.
-    - `shade_coverage_pct` *(float)*: Zone shade percentage.
-    - `segment_risk_score` *(float)*: Risk score calculated for this specific segment ($0 - 100$).
-    - `length_deg` *(float)*: Length of route segment intersecting this polygon.
-    - `length_weight` *(float)*: Proportion of total intersected route length.
-
----
-
-### 2. Detailed Example Output JSON
-
+**Request Payload:**
 ```json
 {
-  "selected_route": "original",
+  "origin": [-112.074, 33.448],
+  "destination": [-112.064, 33.458],
+  "city": "Phoenix",
   "user_preference": "balanced",
-  "max_extra_dist_pct_applied": 20.0,
-  "risk_score_savings": 0.0,
-  "extra_distance_pct": 28.07,
-  "original_route": {
-    "total_distance_deg": 0.008,
-    "multi_factor_risk_score": 79.12,
-    "segments_count": 3,
-    "detailed_segments": [
+  "humidity": 45.0
+}
+```
+
+**Request Parameters:**
+* `origin` *(List[float], required)*: Longitude and Latitude array for the start point `[lng, lat]`.
+* `destination` *(List[float], required)*: Longitude and Latitude array for the end point `[lng, lat]`.
+* `city` *(String, optional)*: Target city for FortyGuard lookup. Default is `"Phoenix"`.
+* `user_preference` *(String, optional)*: Routing policy preset — `"shortest_path"`, `"balanced"`, or `"coolest_path"`.
+* `humidity` *(Float, optional)*: Relative humidity percentage for heat index calculations. Default is `45.0`.
+
+**Response Payload Example:**
+```json
+{
+  "decision": {
+    "selected_route": "alternative",
+    "user_preference": "balanced",
+    "max_extra_dist_pct_applied": 20.0,
+    "risk_score_savings": 14.25,
+    "extra_distance_pct": 8.50,
+    "original_route": {
+      "total_distance_deg": 0.014142,
+      "multi_factor_risk_score": 62.10,
+      "segments_count": 1,
+      "detailed_segments": [
+        {
+          "polygon_id": "poly_zone_1",
+          "surface_temp_c": 42.5,
+          "heat_index_c": 44.12,
+          "shade_coverage_pct": 15.0,
+          "segment_risk_score": 62.10,
+          "length_deg": 0.014142,
+          "length_weight": 1.0
+        }
+      ]
+    },
+    "alternative_route": {
+      "total_distance_deg": 0.015344,
+      "multi_factor_risk_score": 47.85,
+      "segments_count": 1,
+      "detailed_segments": []
+    }
+  },
+  "routes_geojson": {
+    "type": "FeatureCollection",
+    "features": [
       {
-        "polygon_id": "zone_asphalt_downtown_1",
-        "surface_temp_c": 46.8,
-        "heat_index_c": 74.78,
-        "shade_coverage_pct": 5,
-        "segment_risk_score": 82.66,
-        "length_deg": 0.005,
-        "length_weight": 0.625
-      },
-      {
-        "polygon_id": "zone_park_shaded_2",
-        "surface_temp_c": 34.2,
-        "heat_index_c": 37.2,
-        "shade_coverage_pct": 80,
-        "segment_risk_score": 36.88,
-        "length_deg": 0.0,
-        "length_weight": 0.0
-      },
-      {
-        "polygon_id": "zone_commercial_plaza_5",
-        "surface_temp_c": 44.1,
-        "heat_index_c": 64.59,
-        "shade_coverage_pct": 15,
-        "segment_risk_score": 73.21,
-        "length_deg": 0.003,
-        "length_weight": 0.375
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [[-112.074, 33.448], [-112.064, 33.458]]
+        },
+        "properties": { "distance": 1450.0, "type": "original" }
       }
     ]
   },
-  "alternative_route": {
-    "total_distance_deg": 0.010246,
-    "multi_factor_risk_score": 69.27,
-    "segments_count": 5,
-    "detailed_segments": [
+  "thermal_overlay_geojson": {
+    "type": "FeatureCollection",
+    "features": [
       {
-        "polygon_id": "zone_asphalt_downtown_1",
-        "surface_temp_c": 46.8,
-        "heat_index_c": 74.78,
-        "shade_coverage_pct": 5,
-        "segment_risk_score": 82.66,
-        "length_deg": 0.004592,
-        "length_weight": 0.375
-      },
-      {
-        "polygon_id": "zone_park_shaded_2",
-        "surface_temp_c": 34.2,
-        "heat_index_c": 37.2,
-        "shade_coverage_pct": 80,
-        "segment_risk_score": 36.88,
-        "length_deg": 0.0015,
-        "length_weight": 0.1225
-      },
-      {
-        "polygon_id": "zone_residential_mixed_3",
-        "surface_temp_c": 41.5,
-        "heat_index_c": 55.88,
-        "shade_coverage_pct": 25,
-        "segment_risk_score": 64.48,
-        "length_deg": 0.002562,
-        "length_weight": 0.2092
-      },
-      {
-        "polygon_id": "zone_tree_canopy_corridor_4",
-        "surface_temp_c": 36.0,
-        "heat_index_c": 41.01,
-        "shade_coverage_pct": 65,
-        "segment_risk_score": 43.65,
-        "length_deg": 0.0005,
-        "length_weight": 0.0408
-      },
-      {
-        "polygon_id": "zone_commercial_plaza_5",
-        "surface_temp_c": 44.1,
-        "heat_index_c": 64.59,
-        "shade_coverage_pct": 15,
-        "segment_risk_score": 73.21,
-        "length_deg": 0.003092,
-        "length_weight": 0.2525
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [-112.084, 33.438],
+            [-112.054, 33.438],
+            [-112.054, 33.468],
+            [-112.084, 33.468],
+            [-112.084, 33.438]
+          ]]
+        },
+        "properties": {
+          "polygon_id": "poly_zone_1",
+          "surface_temp": 42.5,
+          "shade_coverage": 15.0
+        }
       }
     ]
   }
 }
 ```
 
+---
 
+### 3. Multi-Model AI Chat Gateway
+* **Endpoint**: `POST /api/v1/chat`
+* **Description**: Queries Groq or Google Gemini models with custom system instructions.
+
+**Request Payload:**
+```json
+{
+  "prompt": "How does urban heat island effect impact pedestrians in desert climates?",
+  "provider": "groq",
+  "model": "llama-3.1-8b-instant",
+  "system_instruction": "You are an AI assistant for ThermaX thermal routing and heat risk management."
+}
+```
+
+**Request Parameters:**
+* `prompt` *(String, required)*: User query prompt.
+* `provider` *(String, required)*: LLM vendor — `"groq"` or `"gemini"`.
+* `model` *(String, optional)*: Model identifier override. Defaults to `"llama-3.1-8b-instant"` for Groq or `"gemini-2.5-flash"` for Gemini.
+* `system_instruction` *(String, optional)*: Persona/system context prompt.
+
+**Response Payload Example:**
+```json
+{
+  "provider": "groq",
+  "model": "llama-3.1-8b-instant",
+  "response": "The Urban Heat Island (UHI) effect significantly increases localized surface and ambient temperatures in desert cities like Phoenix. Unshaded asphalt and building materials absorb radiant heat during the day and re-emit it, creating extreme microclimates that increase pedestrian heat stress and dehydration risks."
+}
+```
+
+---
+
+## 🧪 Troubleshooting
+
+* **Unrecognized `groq` module**: Ensure your `venv` is activated (`source venv/bin/activate`) before installing dependencies or launching Uvicorn.
+* **Groq Model Not Found Error**: Avoid outdated model strings like `groq/compound-mini`. Use native Groq models such as `llama-3.1-8b-instant` or `llama-3.3-70b-versatile`.
+
+---
+
+## 📜 License
+
+Distributed under the MIT License.
