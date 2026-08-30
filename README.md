@@ -1,4 +1,4 @@
-# 🌡️ ThermaX — Unified Thermal Routing & Urban Heat Risk AI Gateway
+# 🌡️ ThermaX  Unified Thermal Routing & Urban Heat Risk AI Gateway
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3+-000000.svg?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
