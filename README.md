@@ -5,7 +5,6 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org)
 [![Mapbox GL](https://img.shields.io/badge/Mapbox-GL_v3-000000.svg?style=flat-square&logo=mapbox&logoColor=white)](https://www.mapbox.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Render Ready](https://img.shields.io/badge/Render-Deployed-46E3B7.svg?style=flat-square&logo=render&logoColor=white)](render.yaml)
 [![Vercel Ready](https://img.shields.io/badge/Vercel-Deployed-000000.svg?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
 
 **ThermaX** is an enterprise-grade, microclimate-aware navigation and AI advisory platform designed to protect pedestrians from extreme urban heat. By synthesizing live high-resolution thermal overlay data (via FortyGuard), spatial polyline intersection math (via Shapely), Mapbox/OSRM routing engines, and multi-model LLM AI gateways (Groq & Google Gemini), ThermaX computes walking paths optimized for thermal comfort and provides real-time health risk guidance.
@@ -333,22 +332,24 @@ The Next.js 16 frontend provides a rich, responsive interface:
 
 ## ☁️ Production Deployment
 
-### Backend Deployment (Render)
+ThermaX is designed to be deployed across two separate Vercel projects (one for the frontend, one for the backend) for maximum performance and zero-config serverless scaling.
 
-ThermaX includes a pre-configured [`render.yaml`](render.yaml) for zero-downtime deployment:
+### 1. Backend Deployment (Vercel)
 
-1. Push your repository to GitHub / GitLab.
-2. Connect your repository to [Render](https://render.com).
-3. Create a new **Blueprint Deployment** using `render.yaml`.
-4. Configure environment variables (`GROQ_API_KEY`, `GEMINI_API_KEY`, `FORTYGUARD_API_KEY`) in the Render Dashboard.
+The Python FastAPI backend is natively configured for Vercel's Serverless environment via the `vercel.json` file located in the `thermax_backend` directory.
 
-### Frontend Deployment (Vercel)
+1. Import this repository as a new project in [Vercel](https://vercel.com).
+2. Set the **Root Directory** to `.` (the root of the repo).
+3. Add your Environment Variables: `GROQ_API_KEY`, `GEMINI_API_KEY`, and `FORTYGUARD_API_KEY`.
+4. Hit **Deploy**. Note the generated production URL (e.g., `https://thermax-backend.vercel.app`).
 
-ThermaX frontend is optimized for zero-config deployment on Vercel:
+### 2. Frontend Deployment (Vercel)
 
-1. Import the `/frontend` directory as a new project in [Vercel](https://vercel.com).
-2. Set the required Environment Variable: `NEXT_PUBLIC_MAPBOX_TOKEN`.
-3. Hit **Deploy**. The Next.js API rewrites are pre-configured to automatically forward `/backend/:path*` requests to your deployed FastAPI gateway.
+1. Import this repository as a *second, separate project* in Vercel.
+2. Under Project Settings, set the **Root Directory** to `frontend`.
+3. Add the Environment Variable `NEXT_PUBLIC_MAPBOX_TOKEN`.
+4. Add the Environment Variable `BACKEND_URL` and set it to the URL from Step 1.
+5. Hit **Deploy**. The Next.js API rewrites are pre-configured to automatically forward all `/backend/*` requests directly to your Python API.
 
 ---
 
