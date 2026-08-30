@@ -7,6 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![Vercel Ready](https://img.shields.io/badge/Vercel-Deployed-000000.svg?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
 
+<img width="1810" height="888" alt="image" src="https://github.com/user-attachments/assets/93279889-551b-46dc-8471-7be66a3b1c9c" />
+
+
 **ThermaX** is an enterprise-grade, microclimate-aware navigation and AI advisory platform designed to protect pedestrians from extreme urban heat. By synthesizing live high-resolution thermal overlay data (via FortyGuard), spatial polyline intersection math (via Shapely), Mapbox/OSRM routing engines, and multi-model LLM AI gateways (Groq & Google Gemini), ThermaX computes walking paths optimized for thermal comfort and provides real-time health risk guidance.
 
 ---
