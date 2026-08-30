@@ -1,112 +1,233 @@
-# ThermaX — Unified Thermal Routing & AI Risk Management API
+# 🌡️ ThermaX — Unified Thermal Routing & Urban Heat Risk AI Gateway
 
-ThermaX is a high-performance backend system designed to compute urban pedestrian routes optimized for thermal comfort and heat risk mitigation. By combining live microclimate overlay data with Mapbox/OSRM routing engines and a multi-provider LLM AI gateway (Groq & Gemini), ThermaX provides real-time thermal analysis and intelligent urban heat risk guidance.
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Next.js](https://img.shields.io/badge/Next.js-16.3+-000000.svg?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org)
+[![Mapbox GL](https://img.shields.io/badge/Mapbox-GL_v3-000000.svg?style=flat-square&logo=mapbox&logoColor=white)](https://www.mapbox.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![Render Ready](https://img.shields.io/badge/Render-Deployed-46E3B7.svg?style=flat-square&logo=render&logoColor=white)](render.yaml)
+[![Vercel Ready](https://img.shields.io/badge/Vercel-Deployed-000000.svg?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
+
+**ThermaX** is an enterprise-grade, microclimate-aware navigation and AI advisory platform designed to protect pedestrians from extreme urban heat. By synthesizing live high-resolution thermal overlay data (via FortyGuard), spatial polyline intersection math (via Shapely), Mapbox/OSRM routing engines, and multi-model LLM AI gateways (Groq & Google Gemini), ThermaX computes walking paths optimized for thermal comfort and provides real-time health risk guidance.
+
+---
+
+## 📑 Table of Contents
+
+- [🌟 Key Features](#-key-features)
+- [🏗 System Architecture](#-system-architecture)
+- [🧮 Heat Risk Mathematical Engine](#-heat-risk-mathematical-engine)
+- [🛠 Tech Stack](#-tech-stack)
+- [📁 Project Structure](#-project-structure)
+- [🚀 Quickstart & Setup](#-quickstart--setup)
+  - [Option A: 1-Click PowerShell Launcher (Windows)](#option-a-1-click-powershell-launcher-windows)
+  - [Option B: Manual Installation](#option-b-manual-installation)
+- [🔑 Environment Configuration](#-environment-configuration)
+- [📡 API Endpoint Reference](#-api-endpoint-reference)
+- [🖥 Frontend Dashboard Overview](#-frontend-dashboard-overview)
+- [☁️ Production Deployment](#️-production-deployment)
+- [📜 License](#-license)
 
 ---
 
 ## 🌟 Key Features
 
-* **Thermal-Aware Pathfinding**: Analyzes pedestrian routes against microclimate surface temperature and shading polygons to minimize severe heat exposure.
-* **FortyGuard Integration**: Dynamically fetches real-time surface temperature and shade coverage data, complete with local fallback mocks for uninterrupted testing.
-* **Unified AI Chat Gateway**: Supports switching between **Groq** (fast, open-weights models) and **Google Gemini** for thermal health advising and urban climate queries.
-* **Resilient Infrastructure**: Built with lazy SDK initialization, mathematical safety fallbacks, and robust CORS handling to ensure hackathon-grade uptime.
+* **🌡️ Thermal-Aware Spatial Pathfinding**: Intersects pedestrian routing polylines against real-time microclimate polygons to minimize pedestrian heat stress.
+* **🛰️ FortyGuard Microclimate API Integration**: Dynamically streams high-resolution surface temperature ($T_s$) and shade coverage ($S$) data, backed by localized fallback polygon mocks for uninterrupted reliability.
+* **🔥 Dynamic Heat Index Computation**: Calculates ambient Heat Index ($HI$) using the Rothfusz equation to account for relative humidity and true heat perception.
+* **🤖 Multi-Provider LLM Gateway**: Seamlessly routes AI queries between **Groq** (e.g., `llama-3.1-8b-instant`) and **Google Gemini** (e.g., `gemini-2.5-flash`) with lazy-loaded SDK initialization and graceful fallback handling.
+* **💡 Route Insight Engine (`/analyze-with-insight`)**: Synthesizes spatial microclimate metrics with LLM reasoning to explain routing decisions and deliver contextual safety recommendations.
+* **🗺️ Modern Next.js 16 Dashboard**: Interactive Mapbox GL vector map rendering heat risk zones, route comparisons, real-time metrics cards, and an integrated climate advice chatbot.
+* **⚡ One-Click Local Launcher**: Automated PowerShell script (`start-thermax.ps1`) for instant provisioning of Python virtual environments and Node `pnpm` dependencies.
 
 ---
 
-## 🏗 System Architecture & Project Structure
+## 🏗 System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client["Frontend Client (Next.js 16 / React 19)"]
+        UI[Dashboard & Mapbox GL Map]
+        Panel[Thermal Advice & Chat Panel]
+    end
+
+    subgraph Gateway["Backend API Gateway (FastAPI)"]
+        Router["main.py (API Routes)"]
+        Engine["AdvancedThermalRoutingEngine (Shapely)"]
+    end
+
+    subgraph External["External Services & APIs"]
+        FortyGuard["FortyGuard Microclimate API"]
+        MapboxOSRM["Mapbox / OSRM Routing Service"]
+        GroqAPI["Groq Cloud API (Llama 3.1)"]
+        GeminiAPI["Google Gemini API (Gemini 2.5)"]
+    end
+
+    UI -->|POST /api/v1/routing/analyze-with-insight| Router
+    Panel -->|POST /api/v1/chat| Router
+    Router --> MapboxOSRM
+    Router --> FortyGuard
+    Router --> Engine
+    Engine --> Router
+    Router --> GroqAPI
+    Router --> GeminiAPI
+```
+
+---
+
+## 🧮 Heat Risk Mathematical Engine
+
+The core routing engine evaluates each route segment intersecting a thermal microclimate polygon using a multi-factor scoring function:
+
+### 1. Relative Humidity & Heat Index ($HI$)
+Using the NOAA/Rothfusz regression equation:
+
+$$HI_{F} = -42.379 + 2.04901523 T + 10.14333127 RH - 0.22475541 T \cdot RH - 0.00683783 T^2 - 0.05481717 RH^2 + \dots$$
+
+### 2. Normalized Segment Risk Score
+For a given polygon segment:
+
+$$\text{Composite Risk} = \left( w_{\text{temp}} \cdot \hat{T} + w_{\text{hi}} \cdot \hat{HI} + w_{\text{shade}} \cdot (1 - \hat{S}) \right) \times 100$$
+
+Where:
+* $w_{\text{temp}} = 0.5$, $w_{\text{hi}} = 0.3$, $w_{\text{shade}} = 0.2$
+* $\hat{T}, \hat{HI}$ are min-max normalized metrics against configured operating ranges.
+* $\hat{S}$ is shade coverage percentage converted to an exposure factor.
+
+### 3. Route Selection Policy Presets
+* **`shortest_path`**: Allows up to 5% extra distance for cooler routes.
+* **`balanced`** *(Default)*: Allows up to 20% extra distance for heat risk savings.
+* **`coolest_path`**: Prioritizes minimum risk score regardless of distance threshold ($\infty$).
+
+---
+
+## 🛠 Tech Stack
+
+| Component | Technologies Used |
+| :--- | :--- |
+| **Backend Framework** | Python 3.10+, FastAPI, Uvicorn, Pydantic v2 |
+| **Spatial Engine** | Shapely (Geometry Intersection), Requests |
+| **AI / LLM Gateway** | Groq SDK (`groq`), Google GenAI SDK (`google-genai`) |
+| **Frontend Framework** | Next.js 16 (App Router), React 19, TypeScript |
+| **Map & Styling** | Mapbox GL JS v3, Tailwind CSS v4, Lucide React Icons |
+| **Environment & Package Mgmt** | `pnpm`, Python `venv`, PowerShell, Docker / Render |
+
+---
+
+## 📁 Project Structure
 
 ```text
-thermax-backend/
+ThermaX/
+├── thermax_backend/                # FastAPI Backend Application
+│   ├── main.py                     # Unified API Gateway & Endpoint handlers
+│   ├── thermal_overlay_engine.py   # Multi-factor heat risk math & Shapely engine
+│   ├── services/
+│   │   ├── ai_agent_service.py     # Multi-provider LLM handler (Groq & Gemini)
+│   │   ├── fortyguard_service.py   # FortyGuard Microclimate API integration & fallback
+│   │   └── routing_service.py      # Mapbox / OSRM pedestrian routing service
+│   └── .gitignore                  # Backend git ignore rules
 │
-├── main.py                     # Unified FastAPI application (Routing + AI Chat)
-├── thermal_overlay_engine.py   # Mathematical engine for heat index & segment risk calculation
-├── services/
-│   ├── ai_agent_service.py     # Lazy-loaded LLM SDK handler (Groq & Gemini)
-│   ├── fortyguard_service.py   # FortyGuard Microclimate API service with auto-fallback
-│   └── routing_service.py      # OSRM/Mapbox pedestrian routing service
-├── requirements.txt            # Dependency configuration
-├── .env.example                # Template environment variable configuration
-└── README.md                   # System documentation
+├── frontend/                       # Next.js 16 Web Dashboard
+│   ├── app/                        # Next.js App Router (page.tsx, layout.tsx, globals.css)
+│   ├── components/                 # React UI components (mapbox-route-map.tsx)
+│   ├── public/                     # Static web assets
+│   ├── package.json                # Frontend dependencies & scripts
+│   ├── next.config.ts              # Next.js configuration & API proxy setup
+│   └── tsconfig.json               # TypeScript configuration
+│
+├── .env.example                    # Template for environment variables
+├── requirements.txt                # Python backend dependencies
+├── render.yaml                     # Render Cloud deployment specification
+├── start-thermax.ps1               # 1-Click PowerShell bootstrap & launch script
+└── README.md                       # Comprehensive Project Documentation
 ```
 
 ---
 
-## 🛠 Tech Stack & Dependencies
+## 🚀 Quickstart & Setup
 
-* **Language**: Python 3.10+
-* **Framework**: FastAPI, Uvicorn, Pydantic
-* **Spatial & Geometry Engine**: Shapely
-* **AI & LLM Integration**: `groq`, `google-genai`
-* **Geospatial & HTTP Services**: Requests, Mapbox / OSRM REST APIs
+### Option A: 1-Click PowerShell Launcher (Windows)
+
+Simply open PowerShell in the project root directory and execute:
+
+```powershell
+.\start-thermax.ps1
+```
+
+*This launcher automatically initializes the Python virtual environment (`.venv`), installs `requirements.txt`, resolves Node dependencies using `pnpm`, starts the FastAPI backend on port `8001`, and launches the Next.js development server at **`http://localhost:3000`**.*
 
 ---
 
-## 🚀 Quickstart Guide
+### Option B: Manual Installation
 
-### 1. Prerequisites
-
-Ensure you have Python 3.10+ installed on your system.
-
-### 2. Environment Setup
-
-Clone the repository and create a Python Virtual Environment (`venv`):
+#### 1. Backend Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/thermax-backend.git
-cd thermax-backend
+# Navigate to project root
+cd ThermaX
 
-# Create virtual environment
-python -m venv venv
+# Create and activate virtual environment
+python -m venv .venv
 
-# Activate virtual environment
 # On Linux/macOS:
-source venv/bin/activate
-# On Windows (CMD/PowerShell):
-# .\venv\Scripts\activate
+source .venv/bin/activate
+# On Windows (PowerShell):
+# .\.venv\Scripts\Activate.ps1
+
+# Install backend dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Start FastAPI server
+cd thermax_backend
+uvicorn main:app --reload --port 8001
 ```
 
-### 3. Install Dependencies
+*Backend interactive API documentation (Swagger UI) is accessible at **`http://localhost:8001/docs`**.*
 
-Install all required Python packages inside your active `venv`:
+#### 2. Frontend Setup
 
 ```bash
-pip install --upgrade pip
-pip install fastapi uvicorn python-dotenv requests shapely groq google-genai
+# Open a new terminal in the frontend directory
+cd frontend
+
+# Install Node dependencies
+pnpm install
+
+# Start Next.js development server
+pnpm dev
 ```
 
-### 4. Configure Environment Variables
+*Open your browser and navigate to **`http://localhost:3000`**.*
 
-Create a `.env` file in the root directory:
+---
+
+## 🔑 Environment Configuration
+
+Create a `.env` file in the root directory (refer to `.env.example`):
 
 ```env
+# AI Service Credentials
 GROQ_API_KEY="your_groq_api_key_here"
 GEMINI_API_KEY="your_gemini_api_key_here"
+
+# Microclimate API Credentials
 FORTYGUARD_API_KEY="your_fortyguard_api_key_here"
 FORTYGUARD_BASE_URL="https://api.fortyguard.com/v1"
+
+# Mapbox Access Token (Frontend)
+NEXT_PUBLIC_MAPBOX_TOKEN="your_mapbox_public_access_token_here"
 ```
 
 ---
 
-## ⚡ Running the Application
+## 📡 API Endpoint Reference
 
-Start the local server using Uvicorn:
+### 1. Health & Status Check
+* **Method**: `GET`
+* **Path**: `/health`
+* **Description**: Verifies service status and external API key readiness.
 
-```bash
-uvicorn main:app --reload --port 8000
-```
-
-Access the interactive API documentation (Swagger UI) at: **`http://localhost:8000/docs`**
-
----
-
-## 📡 Detailed API Endpoints & Payloads
-
-### 1. Health Check
-* **Endpoint**: `GET /health`
-* **Description**: Verifies service status and external API key configurations.
-
-**Response Example:**
 ```json
 {
   "status": "ok",
@@ -119,8 +240,9 @@ Access the interactive API documentation (Swagger UI) at: **`http://localhost:80
 ---
 
 ### 2. Route Heat Analysis
-* **Endpoint**: `POST /api/v1/routing/analyze`
-* **Description**: Evaluates pedestrian routes using microclimate surface temps, heat index, and shade coverage to select the safest path.
+* **Method**: `POST`
+* **Path**: `/api/v1/routing/analyze`
+* **Description**: Evaluates pedestrian route polylines against thermal overlay polygons.
 
 **Request Payload:**
 ```json
@@ -133,14 +255,7 @@ Access the interactive API documentation (Swagger UI) at: **`http://localhost:80
 }
 ```
 
-**Request Parameters:**
-* `origin` *(List[float], required)*: Longitude and Latitude array for the start point `[lng, lat]`.
-* `destination` *(List[float], required)*: Longitude and Latitude array for the end point `[lng, lat]`.
-* `city` *(String, optional)*: Target city for FortyGuard lookup. Default is `"Phoenix"`.
-* `user_preference` *(String, optional)*: Routing policy preset — `"shortest_path"`, `"balanced"`, or `"coolest_path"`.
-* `humidity` *(Float, optional)*: Relative humidity percentage for heat index calculations. Default is `45.0`.
-
-**Response Payload Example:**
+**Response Payload:**
 ```json
 {
   "decision": {
@@ -152,105 +267,97 @@ Access the interactive API documentation (Swagger UI) at: **`http://localhost:80
     "original_route": {
       "total_distance_deg": 0.014142,
       "multi_factor_risk_score": 62.10,
-      "segments_count": 1,
-      "detailed_segments": [
-        {
-          "polygon_id": "poly_zone_1",
-          "surface_temp_c": 42.5,
-          "heat_index_c": 44.12,
-          "shade_coverage_pct": 15.0,
-          "segment_risk_score": 62.10,
-          "length_deg": 0.014142,
-          "length_weight": 1.0
-        }
-      ]
+      "segments_count": 1
     },
     "alternative_route": {
       "total_distance_deg": 0.015344,
       "multi_factor_risk_score": 47.85,
-      "segments_count": 1,
-      "detailed_segments": []
+      "segments_count": 1
     }
   },
-  "routes_geojson": {
-    "type": "FeatureCollection",
-    "features": [
-      {
-        "type": "Feature",
-        "geometry": {
-          "type": "LineString",
-          "coordinates": [[-112.074, 33.448], [-112.064, 33.458]]
-        },
-        "properties": { "distance": 1450.0, "type": "original" }
-      }
-    ]
-  },
-  "thermal_overlay_geojson": {
-    "type": "FeatureCollection",
-    "features": [
-      {
-        "type": "Feature",
-        "geometry": {
-          "type": "Polygon",
-          "coordinates": [[
-            [-112.084, 33.438],
-            [-112.054, 33.438],
-            [-112.054, 33.468],
-            [-112.084, 33.468],
-            [-112.084, 33.438]
-          ]]
-        },
-        "properties": {
-          "polygon_id": "poly_zone_1",
-          "surface_temp": 42.5,
-          "shade_coverage": 15.0
-        }
-      }
-    ]
+  "routes_geojson": { "type": "FeatureCollection", "features": [] },
+  "thermal_overlay_geojson": { "type": "FeatureCollection", "features": [] }
+}
+```
+
+---
+
+### 3. Route Heat Analysis with AI Insights
+* **Method**: `POST`
+* **Path**: `/api/v1/routing/analyze-with-insight`
+* **Description**: Combines spatial pathfinding with real-time LLM rationale generation.
+
+**Response Structure**: Returns the standard route decision payload plus an `ai_insight` object:
+```json
+{
+  "decision": { ... },
+  "routes_geojson": { ... },
+  "thermal_overlay_geojson": { ... },
+  "ai_insight": {
+    "provider": "groq",
+    "model": "llama-3.1-8b-instant",
+    "response": "The alternative route reduces your heat risk score by 14.25 points with only an 8.5% increase in walking distance. It leverages shaded canopy corridors along 3rd Street. Recommendation: Carry water and stay hydrated."
   }
 }
 ```
 
 ---
 
-### 3. Multi-Model AI Chat Gateway
-* **Endpoint**: `POST /api/v1/chat`
-* **Description**: Queries Groq or Google Gemini models with custom system instructions.
+### 4. Multi-Model AI Chat Gateway
+* **Method**: `POST`
+* **Path**: `/api/v1/chat`
+* **Description**: Direct query endpoint for heat advisories supporting Groq & Gemini.
 
 **Request Payload:**
 ```json
 {
-  "prompt": "How does urban heat island effect impact pedestrians in desert climates?",
+  "prompt": "What are the best thermal heat safety precautions for walking in desert microclimates?",
   "provider": "groq",
   "model": "llama-3.1-8b-instant",
   "system_instruction": "You are an AI assistant for ThermaX thermal routing and heat risk management."
 }
 ```
 
-**Request Parameters:**
-* `prompt` *(String, required)*: User query prompt.
-* `provider` *(String, required)*: LLM vendor — `"groq"` or `"gemini"`.
-* `model` *(String, optional)*: Model identifier override. Defaults to `"llama-3.1-8b-instant"` for Groq or `"gemini-2.5-flash"` for Gemini.
-* `system_instruction` *(String, optional)*: Persona/system context prompt.
+---
 
-**Response Payload Example:**
-```json
-{
-  "provider": "groq",
-  "model": "llama-3.1-8b-instant",
-  "response": "The Urban Heat Island (UHI) effect significantly increases localized surface and ambient temperatures in desert cities like Phoenix. Unshaded asphalt and building materials absorb radiant heat during the day and re-emit it, creating extreme microclimates that increase pedestrian heat stress and dehydration risks."
-}
-```
+## 🖥 Frontend Dashboard Overview
+
+The Next.js 16 frontend provides a rich, responsive interface:
+
+* **Interactive Map View**: Visualizes heat polygons (color-coded by surface temp/risk) alongside original and alternative routes using Mapbox GL.
+* **Control Sidebar**: Configure origin/destination coordinates, select target city, adjust relative humidity, and choose route preference presets.
+* **Metrics Cards**: Displays side-by-side comparisons of risk scores, total distance, segment count, and percentage savings.
+* **AI Advice Widget**: Renders AI-generated explanations and allows users to chat with the thermal assistant.
 
 ---
 
-## 🧪 Troubleshooting
+## ☁️ Production Deployment
 
-* **Unrecognized `groq` module**: Ensure your `venv` is activated (`source venv/bin/activate`) before installing dependencies or launching Uvicorn.
-* **Groq Model Not Found Error**: Avoid outdated model strings like `groq/compound-mini`. Use native Groq models such as `llama-3.1-8b-instant` or `llama-3.3-70b-versatile`.
+### Backend Deployment (Render)
+
+ThermaX includes a pre-configured [`render.yaml`](render.yaml) for zero-downtime deployment:
+
+1. Push your repository to GitHub / GitLab.
+2. Connect your repository to [Render](https://render.com).
+3. Create a new **Blueprint Deployment** using `render.yaml`.
+4. Configure environment variables (`GROQ_API_KEY`, `GEMINI_API_KEY`, `FORTYGUARD_API_KEY`) in the Render Dashboard.
+
+### Frontend Deployment (Vercel)
+
+ThermaX frontend is optimized for zero-config deployment on Vercel:
+
+1. Import the `/frontend` directory as a new project in [Vercel](https://vercel.com).
+2. Set the required Environment Variable: `NEXT_PUBLIC_MAPBOX_TOKEN`.
+3. Hit **Deploy**. The Next.js API rewrites are pre-configured to automatically forward `/backend/:path*` requests to your deployed FastAPI gateway.
 
 ---
 
 ## 📜 License
 
-Distributed under the MIT License.
+Distributed under the **MIT License**. See `LICENSE` for details.
+
+---
+
+<p align="center">
+  Made with ❤️ by the ThermaX Team · Built for Urban Resilience & Pedestrian Heat Safety
+</p>
