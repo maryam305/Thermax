@@ -6,6 +6,7 @@
 [![Mapbox GL](https://img.shields.io/badge/Mapbox-GL_v3-000000.svg?style=flat-square&logo=mapbox&logoColor=white)](https://www.mapbox.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![Vercel Ready](https://img.shields.io/badge/Vercel-Deployed-000000.svg?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
+[![React](https://img.shields.io/badge/React-19.0+-61DAFB.svg?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 
 <img width="1810" height="888" alt="image" src="https://github.com/user-attachments/assets/93279889-551b-46dc-8471-7be66a3b1c9c" />
 
