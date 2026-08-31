@@ -81,6 +81,54 @@ export async function askThermax(prompt: string, systemInstruction?: string) {
   return result.response;
 }
 
+export type FortyGuardThermalSummary = {
+  tiles_count: number;
+  avg_temp_c: number | null;
+  min_temp_c?: number;
+  max_temp_c?: number;
+  avg_shade_pct?: number;
+  risk_level: string;
+  data_source: string;
+};
+
+export type AiGuidance = {
+  provider: string;
+  model: string;
+  response: string;
+};
+
+export type MeetingPlanResult = {
+  fortyguard_data: FortyGuardThermalSummary;
+  ai_guidance: AiGuidance;
+};
+
+export type InterventionAdviceResult = {
+  fortyguard_data: FortyGuardThermalSummary;
+  ai_guidance: AiGuidance;
+};
+
+export function planMeeting(payload: {
+  location: string;
+  meeting_time: string;
+  city: string;
+}) {
+  return request<MeetingPlanResult>("/api/v1/meeting/plan", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function adviseIntervention(payload: {
+  place_type: string;
+  location: string;
+  city: string;
+}) {
+  return request<InterventionAdviceResult>("/api/v1/interventions/advise", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export type BackendHealth = {
   status: string;
   groq_configured: boolean;

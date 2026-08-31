@@ -43,7 +43,7 @@ def generate_llm_response(
         if not client:
             raise RuntimeError("GROQ_API_KEY is not set or valid.")
         
-        selected_model = model or "llama-3.1-8b-instant"
+        selected_model = model or "openai/gpt-oss-20b"
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_instruction},

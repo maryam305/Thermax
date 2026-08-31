@@ -42,7 +42,7 @@ class AdvancedThermalRoutingEngine:
             (self.weights["heat_index"] * hi_norm) +
             (self.weights["shade"] * shade_factor)
         ) * 100
-        return round(composite_score, 2), heat_index
+        return round(composite_score, 3), heat_index
 
     def analyze_mapbox_route(self, mapbox_route_geojson, humidity=50):
         geom_type = mapbox_route_geojson["geometry"]["type"]
@@ -80,7 +80,7 @@ class AdvancedThermalRoutingEngine:
                 weight = seg["length_deg"] / total_intersected
                 seg["length_weight"] = round(weight, 4)
                 final_composite_risk += weight * seg["segment_risk_score"]
-            final_score = round(final_composite_risk, 2)
+            final_score = round(final_composite_risk, 3)
         else:
             final_score = 0.0
         return {
@@ -100,7 +100,7 @@ class AdvancedThermalRoutingEngine:
         orig_dist = orig_res["total_distance_deg"]
         alt_dist = alt_res["total_distance_deg"]
         dist_diff_pct = ((alt_dist - orig_dist) / orig_dist) * 100 if orig_dist > 0 else 0
-        risk_reduction = orig_res["multi_factor_risk_score"] - alt_res["multi_factor_risk_score"]
+        risk_reduction = round(abs(orig_res["multi_factor_risk_score"] - alt_res["multi_factor_risk_score"]), 3)
         is_alt_selected = (
             alt_res["multi_factor_risk_score"] < orig_res["multi_factor_risk_score"]
             and dist_diff_pct <= max_extra_dist_pct
@@ -108,9 +108,9 @@ class AdvancedThermalRoutingEngine:
         return {
             "selected_route": "alternative" if is_alt_selected else "original",
             "user_preference": user_preference,
-            "max_extra_dist_pct_applied": max_extra_dist_pct,
-            "risk_score_savings": round(risk_reduction, 2) if is_alt_selected else 0.0,
+            "max_allowed_extra_distance_pct": max_extra_dist_pct,
             "extra_distance_pct": round(dist_diff_pct, 2),
+            "risk_score_savings": risk_reduction,
             "original_route": orig_res,
             "alternative_route": alt_res
         }
