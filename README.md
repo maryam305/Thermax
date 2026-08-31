@@ -8,8 +8,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase-11.4+-FFCA28.svg?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Vercel Ready](https://img.shields.io/badge/Vercel-Deployed-000000.svg?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-
-<img width="1810" height="888" alt="ThermaX Dashboard Showcase" src="https://github.com/user-attachments/assets/93279889-551b-46dc-8471-7be66a3b1c9c" />
+<img width="913" height="443" alt="Screenshot 2026-08-31 221259" src="https://github.com/user-attachments/assets/a9b73172-5b6c-4f83-9172-fcaced741863" />
 
 **ThermaX** is an enterprise-grade microclimate routing and urban heat risk intelligence platform designed to protect pedestrians, outdoor workers, and urban planners from extreme urban heat stress. By synthesizing live high-resolution thermal overlay data (via **FortyGuard Microclimate API**), spatial polyline intersection algorithms (via **Shapely**), routing engines (**Mapbox GL** & **OSRM**), real-time database persistence (**Firebase**), and multi-provider LLM AI gateways (**Groq Cloud** & **Google Gemini**), ThermaX computes walking paths optimized for thermal safety and delivers actionable urban heat advice.
 
