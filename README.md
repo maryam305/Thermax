@@ -385,7 +385,7 @@ The Next.js 16 web interface delivers an immersive thermal experience:
 
 ## ☁️ Production Deployment
 
-### Vercel Deployment (Recommended)
+### Vercel Deployment 
 
 ThermaX supports serverless execution on Vercel:
 
